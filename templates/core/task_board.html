@@ -21,11 +21,7 @@
             justify-content: space-between;
             align-items: center;
         }
-        header h1 {
-            margin: 0;
-            font-size: 1.8em;
-            letter-spacing: 1px;
-        }
+        header h1 { margin: 0; font-size: 1.8em; letter-spacing: 1px; }
         #add-task-btn {
             background-color: #007bff;
             color: white;
@@ -36,9 +32,7 @@
             cursor: pointer;
             transition: background-color 0.2s;
         }
-        #add-task-btn:hover {
-            background-color: #0056b3;
-        }
+        #add-task-btn:hover { background-color: #0056b3; }
         footer {
             background-color: #343a40;
             color: #fff;
@@ -46,11 +40,7 @@
             text-align: center;
             margin-top: auto;
         }
-        footer p {
-            margin: 0;
-            font-size: 0.9em;
-            opacity: 0.8;
-        }
+        footer p { margin: 0; font-size: 0.9em; opacity: 0.8; }
         main {
             display: flex;
             flex-grow: 1;
@@ -72,6 +62,7 @@
         }
         .task-list { min-height: 100px; }
         .task-card { 
+            position: relative;
             background: #fff; 
             padding: 15px; 
             border-radius: 5px; 
@@ -80,7 +71,25 @@
             transition: background-color 0.2s ease; 
         }
         .task-card.updating { background-color: #fff9c4; }
-        .task-card p { margin: 0 0 10px 0; font-weight: bold; }
+        
+        .task-card p.task-title { 
+            margin: 0 0 10px 0; 
+            font-weight: bold; 
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        .task-card p.task-title:hover {
+            background-color: #f9f9f9;
+        }
+        .task-title-input {
+            width: 100%;
+            font-weight: bold;
+            padding: 5px;
+            margin: 0 0 10px 0;
+            box-sizing: border-box;
+        }
+        
         .task-card select { 
             width: 100%; 
             padding: 8px; 
@@ -88,82 +97,34 @@
             border: 1px solid #ddd; 
             font-size: 14px; 
         }
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.4);
-        }
-        .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 500px;
-            border-radius: 8px;
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 10px;
-        }
-        .modal-header h2 {
-            margin: 0;
-        }
-        .close-btn {
-            color: #aaa;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .modal-body {
-            padding-top: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        .form-group input[type="text"],
-        .form-group select {
-            width: 100%;
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            box-sizing: border-box;
-        }
-        .modal-footer {
-            padding-top: 15px;
-            border-top: 1px solid #ddd;
-            text-align: right;
-        }
-        .btn {
-            padding: 10px 20px;
+        .delete-task-btn {
+            position: absolute;
+            top: 5px;
+            right: 8px;
+            background: none;
             border: none;
-            border-radius: 5px;
+            font-size: 20px;
+            color: #aaa;
             cursor: pointer;
-            font-size: 16px;
+            transition: color 0.2s;
         }
-        .btn-submit {
-            background-color: #28a745;
-            color: white;
+        .delete-task-btn:hover {
+            color: #dc3545;
         }
-        .btn-cancel {
-            background-color: #dc3545;
-            color: white;
-            margin-left: 10px;
-        }
+
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 8px; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
+        .modal-header h2 { margin: 0; }
+        .close-btn { color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .modal-body { padding-top: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input[type="text"], .form-group select { width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ddd; box-sizing: border-box; }
+        .modal-footer { padding-top: 15px; border-top: 1px solid #ddd; text-align: right; }
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        .btn-submit { background-color: #28a745; color: white; }
+        .btn-cancel { background-color: #dc3545; color: white; margin-left: 10px; }
     </style>
 </head>
 <body>
@@ -180,7 +141,8 @@
             <div class="task-list" id="status-list-{{ status.id }}">
                 {% for task in status.tasks.all %}
                 <div class="task-card" data-task-id="{{ task.id }}">
-                    <p>{{ task.title }}</p>
+                    <button class="delete-task-btn">&times;</button>
+                    <p class="task-title">{{ task.title }}</p>
                     <select class="status-selector">
                         {% for s in statuses %}
                             <option value="{{ s.id }}" {% if s.id == status.id %}selected{% endif %}>
@@ -200,7 +162,8 @@
             <div class="task-list" id="status-list-null">
                 {% for task in unassigned_tasks %}
                 <div class="task-card" data-task-id="{{ task.id }}">
-                    <p>{{ task.title }}</p>
+                    <button class="delete-task-btn">&times;</button>
+                    <p class="task-title">{{ task.title }}</p>
                     <select class="status-selector">
                         {% for s in statuses %}
                             <option value="{{ s.id }}">
@@ -273,8 +236,17 @@
             card.className = 'task-card';
             card.dataset.taskId = task.id;
 
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-task-btn';
+            deleteBtn.innerHTML = '&times;';
+            deleteBtn.addEventListener('click', handleDeleteTask);
+            card.appendChild(deleteBtn);
+
             const title = document.createElement('p');
+            title.className = 'task-title';
             title.textContent = task.title;
+            title.addEventListener('click', handleTitleClick);
+            card.appendChild(title);
             
             const select = document.createElement('select');
             select.className = 'status-selector';
@@ -300,8 +272,6 @@
             select.appendChild(nullOption);
             
             select.addEventListener('change', handleStatusChange);
-
-            card.appendChild(title);
             card.appendChild(select);
             
             return card;
@@ -319,11 +289,67 @@
             updateTaskStatus(taskId, newStatusId, taskCard);
         }
 
+        function handleDeleteTask(event) {
+            const taskCard = event.target.closest('.task-card');
+            const taskId = taskCard.dataset.taskId;
+
+            if (confirm('Are you sure you want to delete this task?')) {
+                deleteTask(taskId, taskCard);
+            }
+        }
+
+        function handleTitleClick(event) {
+            const titleElement = event.target;
+            const taskCard = titleElement.closest('.task-card');
+            const originalTitle = titleElement.textContent;
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'task-title-input';
+            input.value = originalTitle;
+            
+            titleElement.replaceWith(input);
+            input.focus();
+
+            const saveTitle = () => {
+                const newTitle = input.value;
+                
+                if (!newTitle || newTitle === originalTitle) {
+                    const newTitleElement = document.createElement('p');
+                    newTitleElement.className = 'task-title';
+                    newTitleElement.textContent = originalTitle;
+                    newTitleElement.addEventListener('click', handleTitleClick);
+                    input.replaceWith(newTitleElement);
+                    return;
+                }
+                
+                updateTaskTitle(taskCard, newTitle);
+            };
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    input.blur();
+                }
+            });
+            
+            input.addEventListener('blur', saveTitle);
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             
             const selectors = document.querySelectorAll('.status-selector');
             selectors.forEach(select => {
                 select.addEventListener('change', handleStatusChange);
+            });
+
+            const deleteButtons = document.querySelectorAll('.delete-task-btn');
+            deleteButtons.forEach(btn => {
+                btn.addEventListener('click', handleDeleteTask);
+            });
+
+            const taskTitles = document.querySelectorAll('.task-title');
+            taskTitles.forEach(title => {
+                title.addEventListener('click', handleTitleClick);
             });
 
             const modal = document.getElementById('add-task-modal');
@@ -332,18 +358,9 @@
             const cancelBtn = modal.querySelector('.btn-cancel');
             const taskForm = document.getElementById('add-task-form');
 
-            addTaskBtn.addEventListener('click', () => {
-                modal.style.display = 'block';
-            });
-
-            closeBtn.addEventListener('click', () => {
-                modal.style.display = 'none';
-            });
-
-            cancelBtn.addEventListener('click', () => {
-                modal.style.display = 'none';
-            });
-
+            addTaskBtn.addEventListener('click', () => { modal.style.display = 'block'; });
+            closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+            cancelBtn.addEventListener('click', () => { modal.style.display = 'none'; });
             window.addEventListener('click', (event) => {
                 if (event.target == modal) {
                     modal.style.display = 'none';
@@ -352,35 +369,20 @@
 
             taskForm.addEventListener('submit', async (event) => {
                 event.preventDefault(); 
-                
                 const title = document.getElementById('task-title').value;
                 let statusId = document.getElementById('task-status').value;
-                
-                if (statusId === 'null') {
-                    statusId = null;
-                }
-
-                const data = {
-                    title: title,
-                    status: statusId
-                };
+                if (statusId === 'null') { statusId = null; }
+                const data = { title: title, status: statusId };
 
                 try {
                     const response = await fetch('/api/tasks/', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': csrftoken
-                        },
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
                         body: JSON.stringify(data)
                     });
-
-                    if (!response.ok) {
-                        throw new Error('Failed to create task');
-                    }
+                    if (!response.ok) { throw new Error('Failed to create task'); }
                     
                     const newTask = await response.json();
-                    
                     const newCard = createTaskCard(newTask);
                     
                     const targetListId = `status-list-${newTask.status || 'null'}`;
@@ -388,7 +390,6 @@
 
                     modal.style.display = 'none';
                     taskForm.reset();
-
                 } catch (error) {
                     console.error('Error creating task:', error);
                     alert('Failed to create task.');
@@ -399,36 +400,82 @@
         async function updateTaskStatus(taskId, statusId, taskCardElement) {
             const url = `/api/tasks/${taskId}/`;
             const data = { status: statusId };
-
             taskCardElement.classList.add('updating');
-
             try {
                 const response = await fetch(url, {
                     method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrftoken
-                    },
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
                     body: JSON.stringify(data)
                 });
-
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
+                if (!response.ok) { throw new Error('Network response was not ok'); }
                 
                 const targetListId = `status-list-${statusId || 'null'}`;
                 const targetList = document.getElementById(targetListId);
                 
-                if (targetList) {
-                    targetList.appendChild(taskCardElement);
-                }
+                if (targetList) { targetList.appendChild(taskCardElement); }
                 
                 taskCardElement.classList.remove('updating');
-                
             } catch (error) {
                 console.error('Error updating task:', error);
                 alert('Error updating status. See console for details.');
                 taskCardElement.classList.remove('updating');
+            }
+        }
+
+        async function deleteTask(taskId, taskCardElement) {
+            const url = `/api/tasks/${taskId}/`;
+            try {
+                const response = await fetch(url, {
+                    method: 'DELETE',
+                    headers: { 'X-CSRFToken': csrftoken }
+                });
+                if (!response.ok) { throw new Error('Network response was not ok'); }
+                taskCardElement.remove();
+            } catch (error) {
+                console.error('Error deleting task:', error);
+                alert('Error deleting task. See console for details.');
+            }
+        }
+
+        async function updateTaskTitle(taskCardElement, newTitle) {
+            const taskId = taskCardElement.dataset.taskId;
+            const url = `/api/tasks/${taskId}/`;
+            const data = { title: newTitle };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) { throw new Error('Network response was not ok'); }
+
+                const updatedTask = await response.json();
+                
+                const newTitleElement = document.createElement('p');
+                newTitleElement.className = 'task-title';
+                newTitleElement.textContent = updatedTask.title;
+                newTitleElement.addEventListener('click', handleTitleClick);
+                
+                const inputElement = taskCardElement.querySelector('.task-title-input');
+                if (inputElement) {
+                    inputElement.replaceWith(newTitleElement);
+                }
+
+            } catch (error) {
+                console.error('Error updating title:', error);
+                alert('Error updating title. Reverting.');
+                
+                const newTitleElement = document.createElement('p');
+                newTitleElement.className = 'task-title';
+                newTitleElement.textContent = newTitle; 
+                newTitleElement.addEventListener('click', handleTitleClick);
+                
+                const inputElement = taskCardElement.querySelector('.task-title-input');
+                if (inputElement) {
+                    inputElement.replaceWith(newTitleElement);
+                }
             }
         }
     </script>
