@@ -39,8 +39,10 @@ def task_board_page(request):
 
 # --- Secure the API ---
 class TaskViewSet(viewsets.ModelViewSet):
-    # queryset = Task.objects.all() (We remove this line)
-    queryset = Task.objects.all()
+    # --- ADD THIS LINE ---
+    # This is required for makemigrations and the router to work
+    queryset = Task.objects.all() 
+    
     serializer_class = TaskSerializer
     
     # --- Change permissions ---
