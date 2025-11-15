@@ -22,6 +22,8 @@
             align-items: center;
         }
         header h1 { margin: 0; font-size: 1.8em; letter-spacing: 1px; }
+        
+        /* --- New/Updated Header Styles --- */
         #add-task-btn {
             background-color: #007bff;
             color: white;
@@ -33,6 +35,27 @@
             transition: background-color 0.2s;
         }
         #add-task-btn:hover { background-color: #0056b3; }
+        .header-user {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .header-user span {
+            font-size: 1.1em;
+        }
+        .logout-link {
+            color: #fff;
+            background-color: #dc3545;
+            padding: 8px 15px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .logout-link:hover {
+            background-color: #c82333;
+        }
+        /* --- End New Header Styles --- */
+
         footer {
             background-color: #343a40;
             color: #fff;
@@ -48,70 +71,18 @@
             gap: 20px;
             overflow-x: auto;
         }
-        .status-column { 
-            width: 300px; 
-            background: #e9ecef; 
-            border-radius: 8px; 
-            padding: 15px; 
-            flex-shrink: 0; 
-        }
-        .status-column h2 { 
-            margin-top: 0; 
-            padding-bottom: 10px; 
-            border-bottom: 2px solid #ccc; 
-        }
+        /* ... (All other CSS is unchanged) ... */
+        .status-column { width: 300px; background: #e9ecef; border-radius: 8px; padding: 15px; flex-shrink: 0; }
+        .status-column h2 { margin-top: 0; padding-bottom: 10px; border-bottom: 2px solid #ccc; }
         .task-list { min-height: 100px; }
-        .task-card { 
-            position: relative;
-            background: #fff; 
-            padding: 15px; 
-            border-radius: 5px; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
-            margin-bottom: 10px; 
-            transition: background-color 0.2s ease; 
-        }
+        .task-card { position: relative; background: #fff; padding: 15px; border-radius: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 10px; transition: background-color 0.2s ease; }
         .task-card.updating { background-color: #fff9c4; }
-        
-        .task-card p.task-title { 
-            margin: 0 0 10px 0; 
-            font-weight: bold; 
-            cursor: pointer;
-            padding: 5px;
-            border-radius: 3px;
-        }
-        .task-card p.task-title:hover {
-            background-color: #f9f9f9;
-        }
-        .task-title-input {
-            width: 100%;
-            font-weight: bold;
-            padding: 5px;
-            margin: 0 0 10px 0;
-            box-sizing: border-box;
-        }
-        
-        .task-card select { 
-            width: 100%; 
-            padding: 8px; 
-            border-radius: 4px; 
-            border: 1px solid #ddd; 
-            font-size: 14px; 
-        }
-        .delete-task-btn {
-            position: absolute;
-            top: 5px;
-            right: 8px;
-            background: none;
-            border: none;
-            font-size: 20px;
-            color: #aaa;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-        .delete-task-btn:hover {
-            color: #dc3545;
-        }
-
+        .task-card p.task-title { margin: 0 0 10px 0; font-weight: bold; cursor: pointer; padding: 5px; border-radius: 3px; }
+        .task-card p.task-title:hover { background-color: #f9f9f9; }
+        .task-title-input { width: 100%; font-weight: bold; padding: 5px; margin: 0 0 10px 0; box-sizing: border-box; }
+        .task-card select { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; font-size: 14px; }
+        .delete-task-btn { position: absolute; top: 5px; right: 8px; background: none; border: none; font-size: 20px; color: #aaa; cursor: pointer; transition: color 0.2s; }
+        .delete-task-btn:hover { color: #dc3545; }
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
         .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 8px; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
@@ -131,8 +102,12 @@
 
     <header>
         <h1>Dynamic Task Board</h1>
-        <button id="add-task-btn">Add New Task</button>
-    </header>
+        <div class="header-user">
+            <span>Hello, {{ user.username }}!</span>
+            <button id="add-task-btn">Add New Task</button>
+            <a href="{% url 'logout' %}" class="logout-link">Logout</a>
+        </div>
+        </header>
 
     <main>
         {% for status in statuses %}
@@ -183,38 +158,11 @@
     </footer>
 
     <div id="add-task-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Create New Task</h2>
-                <span class="close-btn">&times;</span>
-            </div>
-            <form id="add-task-form">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="task-title">Task Title</label>
-                        <input type="text" id="task-title" name="title" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="task-status">Status</label>
-                        <select id="task-status" name="status">
-                            {% for s in statuses %}
-                                <option value="{{ s.id }}">{{ s.name }}</option>
-                            {% endfor %}
-                            <option value="null">Unassigned</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-submit">Create Task</button>
-                    <button type="button" class="btn btn-cancel">Cancel</button>
-                </div>
-            </form>
         </div>
-    </div>
 
     {{ statuses_json|json_script:"statuses-data" }}
-
     <script>
+        // ... (All your existing JS for CRUD is perfect and needs no changes) ...
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -479,6 +427,5 @@
             }
         }
     </script>
-
 </body>
 </html>

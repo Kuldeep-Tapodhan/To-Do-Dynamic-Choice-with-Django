@@ -1,6 +1,5 @@
 from django.db import models
-
-# Create your models here.
+from django.contrib.auth.models import User # Import the User model
 
 class Status(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -20,6 +19,16 @@ class Task(models.Model):
         null=True, 
         blank=True,
         related_name='tasks'
+    )
+    
+    # --- This is the new, correct line ---
+    # We add null=True and blank=True so existing tasks don't break
+    user = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name="tasks",
+        null=True, # Allow existing tasks to have a null user
+        blank=True
     )
 
     def __str__(self):
