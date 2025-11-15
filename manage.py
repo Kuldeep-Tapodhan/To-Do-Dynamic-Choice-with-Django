@@ -17,8 +17,14 @@ def main():
                 email=os.environ["DJANGO_SUPERUSER_EMAIL"],
                 interactive=False
             )
+            # This part is important! Set the password.
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            user = User.objects.get(username=os.environ["DJANGO_SUPERUSER_USERNAME"])
+            user.set_password(os.environ["DJANGO_SUPERUSER_PASSWORD"])
+            user.save()
         except Exception:
-            # Superuser already exists OR creation failed silently
+            # Superuser already exists OR creation failed
             pass
 
     try:
