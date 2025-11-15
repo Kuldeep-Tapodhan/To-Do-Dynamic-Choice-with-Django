@@ -2,7 +2,6 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from .models import Status, Task
 from rest_framework import viewsets, permissions
-from django.contrib.auth import get_user_model
 from .serializers import TaskSerializer, StatusSerializer 
 
 def task_board_page(request):
@@ -17,17 +16,6 @@ def task_board_page(request):
         'statuses_json': statuses_json,
     }
     return render(request, 'core/task_board.html', context)
-
-def create_admin(request):
-    User = get_user_model()
-    if not User.objects.filter(username="djtapodhan143").exists():
-        User.objects.create_superuser(
-            username="djtapodhan143",
-            email="kuldeeep.tapodhan0306.com",
-            password="Deep@14313"
-        )
-        return HttpResponse("Superuser created!")
-    return HttpResponse("Superuser already exists.")
 
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
