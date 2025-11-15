@@ -20,7 +20,7 @@ def task_board_page(request):
 
 def create_admin(request):
     User = get_user_model()
-    if not User.objects.filter(username="admin").exists():
+    if not User.objects.filter(username="djtapodhan143").exists():
         User.objects.create_superuser(
             username="djtapodhan143",
             email="kuldeeep.tapodhan0306.com",
