@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dynamic Task Board</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh; 
+            background: #f0f2f5; 
+            margin: 0; 
+        }
+        header {
+            background-color: #343a40;
+            color: #fff;
+            padding: 15px 30px;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.8em;
+            letter-spacing: 1px;
+        }
+        #add-task-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        #add-task-btn:hover {
+            background-color: #0056b3;
+        }
+        footer {
+            background-color: #343a40;
+            color: #fff;
+            padding: 15px 30px;
+            text-align: center;
+            margin-top: auto;
+        }
+        footer p {
+            margin: 0;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        main {
+            display: flex;
+            flex-grow: 1;
+            padding: 2em;
+            gap: 20px;
+            overflow-x: auto;
+        }
+        .status-column { 
+            width: 300px; 
+            background: #e9ecef; 
+            border-radius: 8px; 
+            padding: 15px; 
+            flex-shrink: 0; 
+        }
+        .status-column h2 { 
+            margin-top: 0; 
+            padding-bottom: 10px; 
+            border-bottom: 2px solid #ccc; 
+        }
+        .task-list { min-height: 100px; }
+        .task-card { 
+            background: #fff; 
+            padding: 15px; 
+            border-radius: 5px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+            margin-bottom: 10px; 
+            transition: background-color 0.2s ease; 
+        }
+        .task-card.updating { background-color: #fff9c4; }
+        .task-card p { margin: 0 0 10px 0; font-weight: bold; }
+        .task-card select { 
+            width: 100%; 
+            padding: 8px; 
+            border-radius: 4px; 
+            border: 1px solid #ddd; 
+            font-size: 14px; 
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .modal-header h2 {
+            margin: 0;
+        }
+        .close-btn {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .modal-body {
+            padding-top: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input[type="text"],
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+        }
+        .modal-footer {
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            text-align: right;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn-submit {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-cancel {
+            background-color: #dc3545;
+            color: white;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Dynamic Task Board</h1>
+        <button id="add-task-btn">Add New Task</button>
+    </header>
+
+    <main>
+        {% for status in statuses %}
+        <div class="status-column">
+            <h2>{{ status.name }}</h2>
+            <div class="task-list" id="status-list-{{ status.id }}">
+                {% for task in status.tasks.all %}
+                <div class="task-card" data-task-id="{{ task.id }}">
+                    <p>{{ task.title }}</p>
+                    <select class="status-selector">
+                        {% for s in statuses %}
+                            <option value="{{ s.id }}" {% if s.id == status.id %}selected{% endif %}>
+                                {{ s.name }}
+                            </option>
+                        {% endfor %}
+                        <option value="null" {% if not task.status %}selected{% endif %}>Unassigned</option>
+                    </select>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="status-column">
+            <h2>Unassigned</h2>
+            <div class="task-list" id="status-list-null">
+                {% for task in unassigned_tasks %}
+                <div class="task-card" data-task-id="{{ task.id }}">
+                    <p>{{ task.title }}</p>
+                    <select class="status-selector">
+                        {% for s in statuses %}
+                            <option value="{{ s.id }}">
+                                {{ s.name }}
+                            </option>
+                        {% endfor %}
+                        <option value="null" selected>Unassigned</option>
+                    </select>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; All rights reserved 2025</p>
+    </footer>
+
+    <div id="add-task-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Task</h2>
+                <span class="close-btn">&times;</span>
+            </div>
+            <form id="add-task-form">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="task-title">Task Title</label>
+                        <input type="text" id="task-title" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="task-status">Status</label>
+                        <select id="task-status" name="status">
+                            {% for s in statuses %}
+                                <option value="{{ s.id }}">{{ s.name }}</option>
+                            {% endfor %}
+                            <option value="null">Unassigned</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-submit">Create Task</button>
+                    <button type="button" class="btn btn-cancel">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{ statuses_json|json_script:"statuses-data" }}
+
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+
+        function createTaskCard(task) {
+            const card = document.createElement('div');
+            card.className = 'task-card';
+            card.dataset.taskId = task.id;
+
+            const title = document.createElement('p');
+            title.textContent = task.title;
+            
+            const select = document.createElement('select');
+            select.className = 'status-selector';
+            
+            const statuses = JSON.parse(document.getElementById('statuses-data').textContent);
+            
+            statuses.forEach(s => {
+                const option = document.createElement('option');
+                option.value = s.id;
+                option.textContent = s.name;
+                if (s.id === task.status) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+
+            const nullOption = document.createElement('option');
+            nullOption.value = 'null';
+            nullOption.textContent = 'Unassigned';
+            if (task.status === null) {
+                nullOption.selected = true;
+            }
+            select.appendChild(nullOption);
+            
+            select.addEventListener('change', handleStatusChange);
+
+            card.appendChild(title);
+            card.appendChild(select);
+            
+            return card;
+        }
+
+        function handleStatusChange(event) {
+            const taskCard = event.target.closest('.task-card');
+            const taskId = taskCard.dataset.taskId;
+            let newStatusId = event.target.value;
+            
+            if (newStatusId === 'null') {
+                newStatusId = null;
+            }
+            
+            updateTaskStatus(taskId, newStatusId, taskCard);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const selectors = document.querySelectorAll('.status-selector');
+            selectors.forEach(select => {
+                select.addEventListener('change', handleStatusChange);
+            });
+
+            const modal = document.getElementById('add-task-modal');
+            const addTaskBtn = document.getElementById('add-task-btn');
+            const closeBtn = modal.querySelector('.close-btn');
+            const cancelBtn = modal.querySelector('.btn-cancel');
+            const taskForm = document.getElementById('add-task-form');
+
+            addTaskBtn.addEventListener('click', () => {
+                modal.style.display = 'block';
+            });
+
+            closeBtn.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+
+            cancelBtn.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            });
+
+            taskForm.addEventListener('submit', async (event) => {
+                event.preventDefault(); 
+                
+                const title = document.getElementById('task-title').value;
+                let statusId = document.getElementById('task-status').value;
+                
+                if (statusId === 'null') {
+                    statusId = null;
+                }
+
+                const data = {
+                    title: title,
+                    status: statusId
+                };
+
+                try {
+                    const response = await fetch('/api/tasks/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrftoken
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to create task');
+                    }
+                    
+                    const newTask = await response.json();
+                    
+                    const newCard = createTaskCard(newTask);
+                    
+                    const targetListId = `status-list-${newTask.status || 'null'}`;
+                    document.getElementById(targetListId).appendChild(newCard);
+
+                    modal.style.display = 'none';
+                    taskForm.reset();
+
+                } catch (error) {
+                    console.error('Error creating task:', error);
+                    alert('Failed to create task.');
+                }
+            });
+        });
+
+        async function updateTaskStatus(taskId, statusId, taskCardElement) {
+            const url = `/api/tasks/${taskId}/`;
+            const data = { status: statusId };
+
+            taskCardElement.classList.add('updating');
+
+            try {
+                const response = await fetch(url, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
+                const targetListId = `status-list-${statusId || 'null'}`;
+                const targetList = document.getElementById(targetListId);
+                
+                if (targetList) {
+                    targetList.appendChild(taskCardElement);
+                }
+                
+                taskCardElement.classList.remove('updating');
+                
+            } catch (error) {
+                console.error('Error updating task:', error);
+                alert('Error updating status. See console for details.');
+                taskCardElement.classList.remove('updating');
+            }
+        }
+    </script>
+
+</body>
+</html>
