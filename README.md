@@ -1,7 +1,61 @@
-# To-Do Dynamic Choice with Django
+# 📋 To-Do Dynamic Choice with Django
 
-## 📋 Project Overview
-A comprehensive Django-based to-do list application with dynamic choice fields and modern web interface. This project is fully deployed on Render and features real-time task management capabilities.
+A full-featured **task management application** built with Django, featuring a Kanban-style board with dynamic status columns, JWT authentication, role-based permissions, and a modern responsive UI with dark mode support.
+
+🔗 **Live Demo:** [https://to-do-dynamic-choice-with-django.onrender.com](https://to-do-dynamic-choice-with-django.onrender.com)
+
+---
+
+## ✨ Features
+
+### Core Functionality
+
+- **Kanban Task Board** — Drag-free task cards organized by status columns (Unassigned → To Do → In Progress → Review → Done)
+- **Dynamic Status Management** — Tasks can be moved between status columns via dropdown selectors
+- **Inline Title Editing** — Click any task title to edit it in-place
+- **Task Metadata** — Description, priority levels (Low / Medium / High), due dates, and completion tracking
+- **Priority Color Coding** — Task cards are color-coded by priority: 🔴 High, 🟡 Medium, 🟢 Low
+
+### Authentication & Authorization
+
+- **Custom User Model** — Extended Django user with email (required, unique), phone, and bio fields
+- **JWT Authentication** — Token-based auth for API clients using `djangorestframework-simplejwt`
+- **Session Authentication** — Traditional session-based auth for template-rendered pages
+- **Role-Based Permissions** — Superusers can view all normal users' tasks; normal users only see their own data
+- **Object-Level Security** — Users cannot view, edit, or delete other users' tasks
+
+### Superuser Features
+
+- **User Selector Dropdown** — Superusers can switch between viewing any normal user's task board
+- **Viewing Banner** — Clear indicator when viewing another user's data
+- **User List API** — Superuser-only endpoint to list all registered users
+
+### UI/UX
+
+- **Dark/Light Theme Toggle** — Persisted via localStorage
+- **Fully Responsive** — Mobile-first design with breakpoints at 768px, 380px
+- **Modern Design** — Gradient headers, glassmorphism effects, smooth transitions
+- **Rich Signup Form** — Grouped fields (Account Info / Personal Info) with validation
+
+### API
+
+- **RESTful API** — Full CRUD operations on tasks
+- **JWT Token Endpoints** — Obtain, refresh, and verify tokens
+- **API Registration** — Register via API and receive JWT tokens immediately
+- **User Profile API** — Retrieve authenticated user's profile
+
+---
+
+## 🏗️ Tech Stack
+
+| Layer            | Technology                             |
+| ---------------- | -------------------------------------- |
+| **Backend**      | Django 6.0, Django REST Framework      |
+| **Auth**         | djangorestframework-simplejwt (JWT)    |
+| **Database**     | PostgreSQL (Render production)         |
+| **Static Files** | WhiteNoise                             |
+| **Deployment**   | Render (Web Service + PostgreSQL)      |
+| **Frontend**     | Vanilla HTML/CSS/JS (Django Templates) |
 
 ---
 
@@ -9,371 +63,275 @@ A comprehensive Django-based to-do list application with dynamic choice fields a
 
 ```
 To-Do-Dynamic-Choice-with-Django/
-├── dynamic_choices/           # Django project configuration
-│   ├── __init__.py
-│   ├── asgi.py               # ASGI configuration for deployment
-│   ├── settings.py           # Project settings & configurations
-│   ├── urls.py               # URL routing configuration
-│   └── wsgi.py               # WSGI configuration for production
+├── dynamic_choices/              # Django project configuration
+│   ├── settings.py               #   Settings (DB, JWT, REST Framework)
+│   ├── urls.py                   #   Root URL routing (auth + JWT endpoints)
+│   └── wsgi.py                   #   WSGI entry point for production
 │
-├── core/                      # Main Django application
-│   ├── migrations/           # Database migration files
-│   ├── __init__.py
-│   ├── admin.py              # Django admin configuration
-│   ├── apps.py               # App configuration
-│   ├── models.py             # Database models
-│   ├── tests.py              # Unit tests
-│   ├── urls.py               # App-level URL routing
-│   ├── views.py              # View logic & request handlers
-│   └── templates/            # HTML templates
+├── core/                         # Main application
+│   ├── models.py                 #   TimeStampedModel, CustomUser, Status, Task
+│   ├── views.py                  #   TaskViewSet, RegisterView, UserProfileView, etc.
+│   ├── serializers.py            #   User, Register, Task, Status serializers
+│   ├── forms.py                  #   CustomUserCreationForm (signup)
+│   ├── admin.py                  #   Enhanced admin for CustomUser, Task, Status
+│   ├── urls.py                   #   App URLs (/api/tasks/, /api/register/, etc.)
+│   └── migrations/               #   Database migrations + seed data
 │
-├── templates/                 # Global templates directory
-│   ├── base.html
-│   └── index.html
+├── templates/
+│   ├── core/
+│   │   └── task_board.html       #   Main task board (Kanban UI)
+│   └── registration/
+│       ├── login.html            #   Login page
+│       └── signup.html           #   Registration page
 │
-├── static/                    # Static files (CSS, JS, images)
-│   ├── css/
-│   ├── js/
-│   └── images/
-│
-├── manage.py                  # Django management script
-├── requirements.txt           # Python dependencies
-├── build.sh                   # Build script for Render deployment
-├── .gitignore               # Git ignore rules
-└── README.md                # This file
+├── manage.py
+├── requirements.txt
+├── build.sh                      # Render build script
+├── .env                          # Environment variables (not in git)
+└── .gitignore
 ```
 
 ---
 
-## ✨ Features
+## 📊 Database Models
 
-- ✅ **Dynamic To-Do List** - Create, read, update, and delete tasks in real-time
-- ✅ **Dynamic Choice Fields** - Use dropdown menus with dynamic options
-- ✅ **User Authentication** - Secure user login and registration
-- ✅ **User Authorization** - Role-based access control
-- ✅ **RESTful API** - Full CRUD operations via API endpoints
-- ✅ **Responsive Design** - Mobile-friendly interface
-- ✅ **Database Integration** - SQLite (development) / PostgreSQL (production)
-- ✅ **Render Deployment** - Ready for production deployment
+### TimeStampedModel (Abstract)
 
----
+Provides `created_at` and `modified_at` fields to all models.
 
-## 📦 Dependencies
+### CustomUser
 
-```
-Django >= 3.2
-djangorestframework >= 3.10
-django-cors-headers >= 3.5
-gunicorn >= 20.0
-python-decouple >= 3.4
-psycopg2-binary >= 2.8  # For PostgreSQL
-```
+Extends `AbstractUser` with:
+| Field | Type | Notes |
+| ---------- | ------------- | ------------------------ |
+| `email` | EmailField | Required, unique |
+| `phone` | CharField(20) | Optional |
+| `bio` | TextField | Optional, max 500 chars |
 
-View the complete list in [requirements.txt](requirements.txt)
+### Status
 
----
+| Field  | Type           | Notes  |
+| ------ | -------------- | ------ |
+| `name` | CharField(100) | Unique |
 
-## 🚀 Installation Instructions
+Default statuses (seeded via migration): `To Do`, `In Progress`, `Review`, `Done`
 
-### Prerequisites
-- Python 3.8+
-- pip package manager
-- Git
+### Task
 
-### Step-by-Step Setup
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/Kuldeep-Tapodhan/To-Do-Dynamic-Choice-with-Django.git
-   cd To-Do-Dynamic-Choice-with-Django
-   ```
-
-2. **Create a virtual environment:**
-   ```bash
-   # On Windows
-   python -m venv venv
-   venv\Scripts\activate
-
-   # On macOS/Linux
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
-
-3. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Create a `.env` file for environment variables:**
-   ```
-   SECRET_KEY=your_secret_key_here
-   DEBUG=True
-   DATABASE_URL=sqlite:///db.sqlite3
-   ALLOWED_HOSTS=localhost,127.0.0.1
-   ```
-
-5. **Apply database migrations:**
-   ```bash
-   python manage.py migrate
-   ```
-
-6. **Create a superuser (admin account):**
-   ```bash
-   python manage.py createsuperuser
-   ```
-
-7. **Collect static files:**
-   ```bash
-   python manage.py collectstatic --noinput
-   ```
-
-8. **Run the development server:**
-   ```bash
-   python manage.py runserver
-   ```
-
-9. **Access the application:**
-   - Main Application: `http://127.0.0.1:8000/`
-   - Admin Panel: `http://127.0.0.1:8000/admin/`
-
----
-
-## 📖 Usage Guide
-
-### Dashboard
-- Navigate to the homepage to view your to-do list
-- Tasks are displayed with their status, priority, and due date
-
-### Creating Tasks
-1. Click the "Add New Task" button
-2. Fill in task details:
-   - Task title
-   - Description
-   - Due date
-   - Priority level (using dynamic choice field)
-   - Category
-3. Click "Save" to create the task
-
-### Managing Tasks
-- **Edit**: Click the edit icon to modify task details
-- **Complete**: Mark tasks as complete with the checkbox
-- **Delete**: Remove tasks with the delete button
-- **Filter**: Filter tasks by status, priority, or category
-
-### Admin Panel
-- Access at `/admin/`
-- Manage users, tasks, and system settings
-- View application logs and analytics
+| Field          | Type            | Notes                            |
+| -------------- | --------------- | -------------------------------- |
+| `title`        | CharField(200)  | Required                         |
+| `description`  | TextField       | Optional                         |
+| `priority`     | CharField(10)   | Choices: `low`, `medium`, `high` |
+| `due_date`     | DateField       | Optional                         |
+| `is_completed` | BooleanField    | Default: `False`                 |
+| `status`       | FK → Status     | Nullable (Unassigned)            |
+| `user`         | FK → CustomUser | Owner of the task                |
 
 ---
 
 ## 🔌 API Endpoints
 
-### Tasks Management
-```
-GET    /api/tasks/              - Retrieve all tasks
-POST   /api/tasks/              - Create a new task
-GET    /api/tasks/<id>/         - Retrieve a specific task
-PUT    /api/tasks/<id>/         - Update a task
-PATCH  /api/tasks/<id>/         - Partially update a task
-DELETE /api/tasks/<id>/         - Delete a task
-```
+### Authentication (JWT)
 
-### Authentication
-```
-POST   /api/auth/login/         - User login
-POST   /api/auth/logout/        - User logout
-POST   /api/auth/register/      - User registration
-GET    /api/auth/profile/       - Get user profile
-```
+| Method | Endpoint              | Auth | Description                    |
+| ------ | --------------------- | ---- | ------------------------------ |
+| POST   | `/api/token/`         | None | Get access + refresh tokens    |
+| POST   | `/api/token/refresh/` | None | Refresh an access token        |
+| POST   | `/api/token/verify/`  | None | Verify a token is valid        |
+| POST   | `/api/register/`      | None | Register user + get JWT tokens |
 
-### Example API Request
+### Tasks (CRUD)
+
+| Method | Endpoint           | Auth     | Description                            |
+| ------ | ------------------ | -------- | -------------------------------------- |
+| GET    | `/api/tasks/`      | Required | List tasks (own tasks / all for admin) |
+| POST   | `/api/tasks/`      | Required | Create a task                          |
+| GET    | `/api/tasks/<id>/` | Required | Retrieve a task                        |
+| PUT    | `/api/tasks/<id>/` | Required | Full update a task                     |
+| PATCH  | `/api/tasks/<id>/` | Required | Partial update a task                  |
+| DELETE | `/api/tasks/<id>/` | Required | Delete a task                          |
+
+### User
+
+| Method | Endpoint        | Auth      | Description                    |
+| ------ | --------------- | --------- | ------------------------------ |
+| GET    | `/api/profile/` | Required  | Get authenticated user profile |
+| GET    | `/api/users/`   | Superuser | List all normal users          |
+
+### Example: Login & Create Task
+
 ```bash
-curl -X GET http://localhost:8000/api/tasks/ \
-  -H "Authorization: Bearer YOUR_TOKEN"
+# 1. Get JWT token
+curl -X POST https://to-do-dynamic-choice-with-django.onrender.com/api/token/ \
+  -H "Content-Type: application/json" \
+  -d '{"username": "your_user", "password": "your_pass"}'
+
+# Response: {"access": "eyJ...", "refresh": "eyJ..."}
+
+# 2. Create a task
+curl -X POST https://to-do-dynamic-choice-with-django.onrender.com/api/tasks/ \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "My Task", "description": "Details", "priority": "high", "status": 1}'
 ```
 
 ---
 
-## 🌐 Render Deployment Guide
+## 🔐 Permissions & Security
+
+| Role            | Can Do                                                          |
+| --------------- | --------------------------------------------------------------- |
+| **Normal User** | Create, read, update, delete **own tasks only**                 |
+| **Superuser**   | View any normal user's tasks via dropdown, access user list API |
+
+**Security measures:**
+
+- Normal users get `403 Forbidden` if they attempt `?user_id=` URL manipulation
+- Superusers cannot view other superuser accounts
+- Task `user` field is read-only in the API (set automatically)
+- `perform_update` prevents reassigning tasks to other users
+- `perform_destroy` verifies ownership before deletion
+- JWT tokens expire after 60 min (access) / 7 days (refresh), configurable via `.env`
+
+---
+
+## 🚀 Local Development Setup
 
 ### Prerequisites
-- Render account (free at [render.com](https://render.com))
-- GitHub repository connected to Render
 
-### Deployment Steps
+- Python 3.10+
+- PostgreSQL
+- pip or uv
 
-1. **Create Environment Variables on Render:**
-   - Go to your service settings on Render
-   - Add the following environment variables:
-     ```
-     SECRET_KEY=your_production_secret_key
-     DEBUG=False
-     DATABASE_URL=your_postgres_database_url
-     ALLOWED_HOSTS=your-app-name.onrender.com
-     PYTHON_VERSION=3.10.12
-     ```
+### Steps
 
-2. **Configure Build Command:**
-   ```bash
-   pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput
-   ```
+```bash
+# 1. Clone the repository
+git clone https://github.com/Kuldeep-Tapodhan/To-Do-Dynamic-Choice-with-Django.git
+cd To-Do-Dynamic-Choice-with-Django
 
-3. **Configure Start Command:**
-   ```bash
-   gunicorn dynamic_choices.wsgi:application --bind 0.0.0.0:$PORT
-   ```
+# 2. Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate        # Linux/macOS
+# venv\Scripts\activate          # Windows
 
-4. **Deploy:**
-   - Push your code to GitHub
-   - Render will automatically deploy on every push to the main branch
+# 3. Install dependencies
+pip install -r requirements.txt
 
-5. **Database Setup:**
-   - Create a PostgreSQL database on Render
-   - Update the `DATABASE_URL` environment variable
+# 4. Create .env file
+cat > .env << 'EOF'
+SECRET_KEY=your-secret-key-here
+DEBUG=True
+ALLOWED_HOSTS=127.0.0.1,localhost
 
-6. **Access Your Application:**
-   - Your app will be available at `https://your-app-name.onrender.com`
+# Local PostgreSQL
+DB_NAME=todo_db
+DB_USER=postgres
+DB_PASSWORD=your_password
+DB_HOST=localhost
+DB_PORT=5432
+EOF
 
-### Monitoring & Logs
-- View deployment logs in the Render dashboard
-- Check application logs in real-time
-- Monitor resource usage and performance metrics
+# 5. Create database & run migrations
+createdb todo_db
+python manage.py migrate
+
+# 6. Create superuser
+python manage.py createsuperuser
+
+# 7. Run development server
+python manage.py runserver
+```
+
+Access at: `http://127.0.0.1:8000/`
 
 ---
 
-## 🔧 Configuration
+## 🌐 Render Deployment
 
-### Django Settings
-Key settings in `dynamic_choices/settings.py`:
+### Environment Variables (Render Dashboard)
 
-```python
-INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'rest_framework',
-    'corsheaders',
-    'core',
-]
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'your_database_name',
-        'USER': 'your_username',
-        'PASSWORD': 'your_password',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
-}
 ```
+SECRET_KEY=<your-production-secret-key>
+DEBUG=False
+ALLOWED_HOSTS=to-do-dynamic-choice-with-django.onrender.com
+DB_NAME=<render-db-name>
+DB_USER=<render-db-user>
+DB_PASSWORD=<render-db-password>
+DB_HOST=<render-db-host>.oregon-postgres.render.com
+DB_PORT=5432
+DB_SSLMODE=require
+```
+
+### Build & Start Commands
+
+| Setting           | Value                                       |
+| ----------------- | ------------------------------------------- |
+| **Build Command** | `./build.sh`                                |
+| **Start Command** | `gunicorn dynamic_choices.wsgi:application` |
+
+### `build.sh`
+
+```bash
+#!/usr/bin/env bash
+set -o errexit
+pip install -r requirements.txt
+python manage.py collectstatic --noinput
+python manage.py migrate
+```
+
+---
+
+## 📦 Dependencies
+
+| Package                         | Purpose                      |
+| ------------------------------- | ---------------------------- |
+| `django`                        | Web framework                |
+| `djangorestframework`           | REST API                     |
+| `djangorestframework-simplejwt` | JWT authentication           |
+| `gunicorn`                      | Production WSGI server       |
+| `psycopg2-binary`               | PostgreSQL adapter           |
+| `dj-database-url`               | Database URL parsing         |
+| `whitenoise`                    | Static file serving          |
+| `python-dotenv`                 | Environment variable loading |
 
 ---
 
 ## 🧪 Testing
 
-Run tests with:
 ```bash
 python manage.py test
-```
-
-Run tests with coverage:
-```bash
-pip install coverage
-coverage run --source='.' manage.py test
-coverage report
-coverage html
-```
-
----
-
-## 📝 Database Models
-
-### Task Model
-```python
-class Task(models.Model):
-    PRIORITY_CHOICES = [
-        ('low', 'Low'),
-        ('medium', 'Medium'),
-        ('high', 'High'),
-    ]
-    
-    title = models.CharField(max_length=200)
-    description = models.TextField(blank=True)
-    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES)
-    due_date = models.DateField()
-    is_completed = models.BooleanField(default=False)
-    category = models.CharField(max_length=100)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
 ```
 
 ---
 
 ## 🐛 Troubleshooting
 
-### Common Issues
-
-**Issue: `ModuleNotFoundError: No module named 'django'`**
-- Solution: Install dependencies with `pip install -r requirements.txt`
-
-**Issue: `django.core.exceptions.ImproperlyConfigured`**
-- Solution: Check your environment variables and `settings.py` configuration
-
-**Issue: Database migration errors**
-- Solution: Run `python manage.py migrate` and check database connection
-
-**Issue: Static files not loading on Render**
-- Solution: Run `python manage.py collectstatic` and check STATIC_URL and STATIC_ROOT
-
----
-
-## 📚 Additional Resources
-
-- [Django Documentation](https://docs.djangoproject.com/)
-- [Django REST Framework](https://www.django-rest-framework.org/)
-- [Render Documentation](https://render.com/docs)
-- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
-
----
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+| Problem                                    | Solution                                                           |
+| ------------------------------------------ | ------------------------------------------------------------------ |
+| `ModuleNotFoundError: No module named ...` | `pip install -r requirements.txt`                                  |
+| `Dependency on app with no migrations`     | `python manage.py makemigrations core && python manage.py migrate` |
+| `Method Not Allowed (GET): /logout/`       | Django 5+ requires POST for logout (already handled in template)   |
+| Static files not loading on Render         | `python manage.py collectstatic --noinput`                         |
+| SSL error connecting to Render DB          | Add `DB_SSLMODE=require` to `.env`                                 |
 
 ---
 
 ## 👨‍💻 Author
 
 **Kuldeep Tapodhan**
+
 - GitHub: [@Kuldeep-Tapodhan](https://github.com/Kuldeep-Tapodhan)
-- Email: djtapodhan143@gmail.com
 
 ---
 
-## 🎉 Acknowledgments
+## 📄 License
 
-- Django community for the excellent framework
-- Render for seamless deployment
-- Contributors and users
+This project is licensed under the MIT License.
 
 ---
 
-**Last Updated:** February 10, 2026
+**Last Updated:** February 23, 2026
 
-**Status:** ✅ Deployed on Render | ✅ Production Ready
+**Status:** ✅ Live on Render | ✅ JWT Auth | ✅ Role-Based Permissions | ✅ Mobile Responsive
