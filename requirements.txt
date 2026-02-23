@@ -1,6 +1,8 @@
-django==3.2.18
+django
 djangorestframework
+djangorestframework-simplejwt
 gunicorn
 psycopg2-binary
 dj-database-url
 whitenoise
+python-dotenv

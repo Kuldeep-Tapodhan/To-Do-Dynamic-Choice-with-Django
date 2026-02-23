@@ -275,18 +275,12 @@
         .status-column { 
             min-width: 280px;
             width: 300px;
-            background: var(--column-bg);
-            backdrop-filter: blur(10px);
+            background: transparent;
             border-radius: 12px;
             padding: 1.25rem;
             flex-shrink: 0;
-            box-shadow: 0 4px 6px var(--card-shadow);
-            transition: all 0.3s ease;
         }
         
-        .status-column:hover {
-            box-shadow: 0 8px 12px var(--card-shadow-hover);
-        }
         
         .status-column h2 { 
             margin: 0 0 1rem 0;
@@ -311,6 +305,41 @@
             margin-bottom: 0.75rem;
             transition: all 0.3s ease;
             border-left: 4px solid #2563eb;
+        }
+        .task-card[data-priority="high"] { border-left-color: #dc2626; }
+        .task-card[data-priority="medium"] { border-left-color: #f59e0b; }
+        .task-card[data-priority="low"] { border-left-color: #22c55e; }
+        .task-description {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin: 0 0 0.5rem 0;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+        .task-meta {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .priority-badge {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            letter-spacing: 0.05em;
+        }
+        .priority-badge.high { background: rgba(220, 38, 38, 0.15); color: #dc2626; }
+        .priority-badge.medium { background: rgba(245, 158, 11, 0.15); color: #d97706; }
+        .priority-badge.low { background: rgba(34, 197, 94, 0.15); color: #16a34a; }
+        .due-date {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
         }
         
         .task-card:hover {
@@ -806,6 +835,47 @@
             }
         }
 
+        /* Superuser User Selector */
+        .user-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .user-selector select {
+            padding: 0.5rem 0.75rem;
+            border: 2px solid rgba(37, 99, 235, 0.3);
+            border-radius: 8px;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .user-selector select:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+        .user-selector label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+        .viewing-banner {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            text-align: center;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .viewing-banner a {
+            color: white;
+            margin-left: 0.75rem;
+            text-decoration: underline;
+        }
+
         /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
@@ -848,6 +918,17 @@
                         <circle cx="12" cy="7" r="4"></circle>
                     </svg>
                 </div>
+                {% if all_users %}
+                <div class="user-selector">
+                    <label for="user-select">View as:</label>
+                    <select id="user-select" onchange="window.location.href='?user_id='+this.value">
+                        <option value="">-- My Tasks --</option>
+                        {% for u in all_users %}
+                        <option value="{{ u.id }}" {% if viewing_user.id == u.id %}selected{% endif %}>{{ u.username }} ({{ u.first_name }} {{ u.last_name }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
                 <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
                     <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="5"></circle>
@@ -868,27 +949,67 @@
                     </svg>
                     <span class="btn-text">Add New Task</span>
                 </button>
-                <a href="{% url 'logout' %}" class="logout-link">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                        <polyline points="16 17 21 12 16 7"></polyline>
-                        <line x1="21" y1="12" x2="9" y2="12"></line>
-                    </svg>
-                    <span class="logout-text">Logout</span>
-                </a>
+                <form method="post" action="{% url 'logout' %}" style="display:inline;margin:0;">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-link" style="border:none;cursor:pointer;font-family:inherit;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <span class="logout-text">Logout</span>
+                    </button>
+                </form>
             </div>
         </div>
     </header>
 
+    {% if not is_viewing_own %}
+    <div class="viewing-banner">
+        📋 Viewing tasks of: <strong>{{ viewing_user.username }}</strong> ({{ viewing_user.first_name }} {{ viewing_user.last_name }})
+        <a href="{% url 'task-board' %}">← Back to my tasks</a>
+    </div>
+    {% endif %}
+
     <main>
+        <div class="status-column">
+            <h2>Unassigned</h2>
+            <div class="task-list" id="status-list-null">
+                {% for task in unassigned_tasks %}
+                <div class="task-card" data-task-id="{{ task.id }}" data-priority="{{ task.priority }}">
+                    <button class="delete-task-btn">&times;</button>
+                    <p class="task-title">{{ task.title }}</p>
+                    {% if task.description %}<p class="task-description">{{ task.description }}</p>{% endif %}
+                    <div class="task-meta">
+                        <span class="priority-badge {{ task.priority }}">{{ task.priority }}</span>
+                        {% if task.due_date %}<span class="due-date">📅 {{ task.due_date }}</span>{% endif %}
+                    </div>
+                    <select class="status-selector">
+                        {% for s in statuses %}
+                            <option value="{{ s.id }}">
+                                {{ s.name }}
+                            </option>
+                        {% endfor %}
+                        <option value="null" selected>Unassigned</option>
+                    </select>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
         {% for status in statuses %}
         <div class="status-column">
             <h2>{{ status.name }}</h2>
             <div class="task-list" id="status-list-{{ status.id }}">
                 {% for task in status.tasks.all %}
-                <div class="task-card" data-task-id="{{ task.id }}">
+                <div class="task-card" data-task-id="{{ task.id }}" data-priority="{{ task.priority }}">
                     <button class="delete-task-btn">&times;</button>
                     <p class="task-title">{{ task.title }}</p>
+                    {% if task.description %}<p class="task-description">{{ task.description }}</p>{% endif %}
+                    <div class="task-meta">
+                        <span class="priority-badge {{ task.priority }}">{{ task.priority }}</span>
+                        {% if task.due_date %}<span class="due-date">📅 {{ task.due_date }}</span>{% endif %}
+                    </div>
                     <select class="status-selector">
                         {% for s in statuses %}
                             <option value="{{ s.id }}" {% if s.id == status.id %}selected{% endif %}>
@@ -902,26 +1023,6 @@
             </div>
         </div>
         {% endfor %}
-
-        <div class="status-column">
-            <h2>Unassigned</h2>
-            <div class="task-list" id="status-list-null">
-                {% for task in unassigned_tasks %}
-                <div class="task-card" data-task-id="{{ task.id }}">
-                    <button class="delete-task-btn">&times;</button>
-                    <p class="task-title">{{ task.title }}</p>
-                    <select class="status-selector">
-                        {% for s in statuses %}
-                            <option value="{{ s.id }}">
-                                {{ s.name }}
-                            </option>
-                        {% endfor %}
-                        <option value="null" selected>Unassigned</option>
-                    </select>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
     </main>
 
     <footer>
@@ -946,6 +1047,22 @@
                     <div class="form-group">
                         <label for="task-title">Task Title</label>
                         <input type="text" id="task-title" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="task-description">Description</label>
+                        <textarea id="task-description" name="description" rows="3" style="width:100%;padding:0.75rem;border-radius:8px;border:2px solid var(--border-color);background:var(--input-bg);color:var(--text-primary);font-family:inherit;font-size:0.95rem;resize:vertical;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="task-priority">Priority</label>
+                        <select id="task-priority" name="priority">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="task-due-date">Due Date</label>
+                        <input type="date" id="task-due-date" name="due_date" style="width:100%;padding:0.75rem;border-radius:8px;border:2px solid var(--border-color);background:var(--input-bg);color:var(--text-primary);font-size:0.95rem;">
                     </div>
                     <div class="form-group">
                         <label for="task-status">Status</label>
@@ -988,6 +1105,7 @@
             const card = document.createElement('div');
             card.className = 'task-card';
             card.dataset.taskId = task.id;
+            card.dataset.priority = task.priority || 'medium';
 
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'delete-task-btn';
@@ -1000,6 +1118,27 @@
             title.textContent = task.title;
             title.addEventListener('click', handleTitleClick);
             card.appendChild(title);
+
+            if (task.description) {
+                const desc = document.createElement('p');
+                desc.className = 'task-description';
+                desc.textContent = task.description;
+                card.appendChild(desc);
+            }
+
+            const meta = document.createElement('div');
+            meta.className = 'task-meta';
+            const badge = document.createElement('span');
+            badge.className = `priority-badge ${task.priority || 'medium'}`;
+            badge.textContent = task.priority || 'medium';
+            meta.appendChild(badge);
+            if (task.due_date) {
+                const due = document.createElement('span');
+                due.className = 'due-date';
+                due.textContent = '📅 ' + task.due_date;
+                meta.appendChild(due);
+            }
+            card.appendChild(meta);
             
             const select = document.createElement('select');
             select.className = 'status-selector';
@@ -1148,9 +1287,12 @@
             taskForm.addEventListener('submit', async (event) => {
                 event.preventDefault(); 
                 const title = document.getElementById('task-title').value;
+                const description = document.getElementById('task-description').value;
+                const priority = document.getElementById('task-priority').value;
+                const dueDate = document.getElementById('task-due-date').value || null;
                 let statusId = document.getElementById('task-status').value;
                 if (statusId === 'null') { statusId = null; }
-                const data = { title: title, status: statusId };
+                const data = { title, description, priority, due_date: dueDate, status: statusId };
 
                 try {
                     const response = await fetch('/api/tasks/', {
