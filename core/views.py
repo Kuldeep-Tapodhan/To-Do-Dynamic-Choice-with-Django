@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.http import HttpResponseForbidden
 from .models import Status, Task, CustomUser
 from rest_framework import viewsets, permissions, generics, status as drf_status
 from rest_framework.response import Response
@@ -14,23 +15,49 @@ from django.views.generic.edit import CreateView
 from .forms import CustomUserCreationForm
 
 
-# --- Secure the HTML Page ---
+# ==================================
+# Custom Permissions
+# ==================================
+class IsSuperUser(permissions.BasePermission):
+    """Only allow superusers."""
+    def has_permission(self, request, view):
+        return request.user and request.user.is_superuser
+
+
+class IsOwnerOrSuperUser(permissions.BasePermission):
+    """Allow access only to the owner of the object or a superuser."""
+    def has_object_permission(self, request, view, obj):
+        if request.user.is_superuser:
+            return True
+        return obj.user == request.user
+
+
+# ==================================
+# HTML Page Views
+# ==================================
 @login_required
 def task_board_page(request):
-    # Superuser can view any user's tasks by selecting from dropdown
     viewing_user = request.user
 
     if request.user.is_superuser:
         selected_user_id = request.GET.get('user_id')
+        # Only list non-superuser accounts
         all_users = CustomUser.objects.filter(is_superuser=False).order_by('username')
 
         if selected_user_id:
             try:
-                viewing_user = CustomUser.objects.get(id=selected_user_id)
+                # SECURITY: Only allow viewing non-superuser accounts
+                viewing_user = CustomUser.objects.get(
+                    id=selected_user_id,
+                    is_superuser=False
+                )
             except CustomUser.DoesNotExist:
                 viewing_user = request.user
     else:
         all_users = None
+        # SECURITY: Ignore user_id param for normal users
+        if request.GET.get('user_id'):
+            return HttpResponseForbidden("You do not have permission to view other users' data.")
 
     # Get tasks for the viewing user
     user_tasks = Task.objects.filter(user=viewing_user).order_by('-created_at')
@@ -57,29 +84,59 @@ def task_board_page(request):
     return render(request, 'core/task_board.html', context)
 
 
-# --- API: Task CRUD ---
+# ==================================
+# API Views
+# ==================================
+
+# --- Tasks CRUD ---
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrSuperUser]
 
     def get_queryset(self):
         user = self.request.user
 
-        # Superuser can query any user's tasks via ?user_id=
         if user.is_superuser:
             user_id = self.request.query_params.get('user_id')
             if user_id:
-                return Task.objects.filter(user_id=user_id).order_by('-created_at')
+                # Only allow querying non-superuser accounts
+                return Task.objects.filter(
+                    user_id=user_id,
+                    user__is_superuser=False
+                ).order_by('-created_at')
             return Task.objects.all().order_by('-created_at')
 
-        return user.tasks.all().order_by('-created_at')
+        # Normal users: ONLY their own tasks, nothing else
+        return Task.objects.filter(user=user).order_by('-created_at')
 
     def perform_create(self, serializer):
+        # Always assign task to the logged-in user
         serializer.save(user=self.request.user)
 
+    def perform_update(self, serializer):
+        # Prevent changing the user field on update
+        serializer.save(user=serializer.instance.user)
 
-# --- API: User Registration (returns JWT tokens) ---
+    def perform_destroy(self, instance):
+        # Extra safety: normal users can only delete their own tasks
+        if not self.request.user.is_superuser and instance.user != self.request.user:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("You can only delete your own tasks.")
+        instance.delete()
+
+
+# --- User List (Superuser only) ---
+class UserListView(APIView):
+    permission_classes = [permissions.IsAuthenticated, IsSuperUser]
+
+    def get(self, request):
+        users = CustomUser.objects.filter(is_superuser=False).order_by('username')
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data)
+
+
+# --- User Registration (public, returns JWT tokens) ---
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
@@ -101,7 +158,7 @@ class RegisterView(generics.CreateAPIView):
         }, status=drf_status.HTTP_201_CREATED)
 
 
-# --- API: User Profile ---
+# --- User Profile (authenticated users) ---
 class UserProfileView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -110,7 +167,9 @@ class UserProfileView(APIView):
         return Response(serializer.data)
 
 
-# --- Template: Registration View ---
+# ==================================
+# Template Views
+# ==================================
 class SignUpView(CreateView):
     form_class = CustomUserCreationForm
     success_url = reverse_lazy('login')

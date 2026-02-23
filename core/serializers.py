@@ -51,12 +51,14 @@ class TaskSerializer(serializers.ModelSerializer):
         queryset=Status.objects.all(),
         allow_null=True
     )
+    # user is read-only — assigned automatically, cannot be changed via API
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = Task
         fields = [
-            'id', 'title', 'description',
+            'id', 'user', 'title', 'description',
             'status', 'priority', 'due_date',
             'is_completed', 'created_at', 'modified_at',
         ]
-        read_only_fields = ['id', 'created_at', 'modified_at']
+        read_only_fields = ['id', 'user', 'created_at', 'modified_at']
