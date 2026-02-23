@@ -220,6 +220,22 @@
             color: var(--text-secondary);
             font-weight: 500;
         }
+
+        /* --- Responsive --- */
+        @media (max-width: 600px) {
+            header { padding: 0.75rem 1rem; }
+            header h1 { font-size: 1.1rem; }
+            .logo-icon { width: 34px; height: 34px; }
+            .logo-icon svg { width: 18px; height: 18px; }
+            main { padding: 1rem; }
+            .form-container {
+                max-width: 100%;
+                padding: 1.5rem;
+            }
+            footer { padding: 0.75rem; }
+            .footer-content { flex-direction: column; gap: 0.35rem; }
+            footer p { font-size: 0.8rem; }
+        }
     </style>
 </head>
 <body>

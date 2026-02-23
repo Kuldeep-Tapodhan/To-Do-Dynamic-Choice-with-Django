@@ -260,6 +260,23 @@
         text-decoration: underline;
       }
 
+      /* --- Responsive --- */
+      @media (max-width: 600px) {
+        body { padding: 0.5rem; }
+        .form-container {
+          max-width: 100%;
+          padding: 1.5rem;
+          border-radius: 12px;
+        }
+        .form-row {
+          grid-template-columns: 1fr;
+          gap: 0;
+        }
+        .form-container h2 {
+          font-size: 1.2rem;
+        }
+      }
+
       /* --- Footer Styles --- */
       footer {
         background: var(--header-bg);
